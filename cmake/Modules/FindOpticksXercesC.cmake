@@ -23,6 +23,7 @@ or G4persistency target ?
 
 
 set(OpticksXercesC_MODULE "${CMAKE_CURRENT_LIST_FILE}")
+set (OpticksXercesC_VERBOSE  "true")
 
 if(OpticksXercesC_VERBOSE)
 message(STATUS "OpticksXercesC_MODULE : ${OpticksXercesC_MODULE} " )
@@ -114,13 +115,14 @@ if(NOT OpticksXercesC_FOUND)
              /usr/lib64
              /usr/local/lib
              /opt/local/lib
+	     /usr/lib/x86_64-linux-gnu
            NO_DEFAULT_PATH  
         )
     endif()
 
 endif()
 
-
+    message(STATUS "(OpticksXercesC_LIBRARY : ${OpticksXercesC_LIBRARY} ")
 
 
 if(OpticksXercesC_INCLUDE_DIR AND OpticksXercesC_LIBRARY)

@@ -155,7 +155,7 @@ opticksdata-dir(){ echo $(opticks-prefix)/opticksdata ; }
 opticksdata-c(){   cd $(opticksdata-dir)/$1 ; }
 opticksdata-cd(){  cd $(opticksdata-dir)/$1 ; }
 
-opticksdata-url(){       echo http://bitbucket.org/simoncblyth/opticksdata ; }
+opticksdata-url(){     echo https://hwenzel@bitbucket.org/simoncblyth/opticksdata ; }
 opticksdata-url-ssh(){ echo ssh://hg@bitbucket.org/simoncblyth/opticksdata ; }
 
 opticksdata-j(){ echo $(opticksdata-xpath j1808).gdml ; }
@@ -226,8 +226,8 @@ opticksdata-get(){
 
    local url=$(opticksdata-url)
    local nam=$(basename $url)
-   if [ ! -d "$nam/.hg" ]; then
-        local cmd="hg clone $url "
+   if [ ! -d "$nam/.git" ]; then
+        local cmd="git clone $url "
         echo $msg proceeding with \"$cmd\" from $dir 
         eval $cmd
    else
@@ -248,8 +248,8 @@ opticksdata-pull()
    local iwd=$PWD
    opticksdata-cd
    echo $msg PWD $PWD
-   hg pull 
-   hg up
+   git  pull 
+   git up
    cd $iwd  
 }
 

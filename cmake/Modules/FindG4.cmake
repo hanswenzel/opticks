@@ -1,12 +1,16 @@
-
 set(G4_MODULE "${CMAKE_CURRENT_LIST_FILE}")
+set(G4_VERBOSE "true")
+message(STATUS "FindG4")
+message(STATUS "${CMAKE_CURRENT_LIST_FILE}")
 
 if(NOT G4_PREFIX)
     # this works when this module is included from installed tree
     get_filename_component(G4_MODULE_DIR ${CMAKE_CURRENT_LIST_FILE} DIRECTORY)
     get_filename_component(G4_MODULE_DIRDIR ${G4_MODULE_DIR} DIRECTORY)
     get_filename_component(G4_MODULE_DIRDIRDIR ${G4_MODULE_DIRDIR} DIRECTORY)
-    set(G4_PREFIX      ${G4_MODULE_DIRDIRDIR}/externals)
+    #set(G4_PREFIX      ${G4_MODULE_DIRDIRDIR}/externals)
+    set(G4_PREFIX   "$ENV{G4INSTALL}")
+    
 endif()
 
 # huh : the G4_PREFIX is doing nothing to help with
@@ -15,9 +19,27 @@ endif()
 #     -DGeant4_DIR=$(opticks-dir)/externals/lib64/Geant4-10.2.1
 
 
-find_package(Geant4 CONFIG QUIET)   
-
+#find_package(Geant4 CONFIG QUIET)
+find_package(Geant4 REQUIRED)
+#find_package(Geant4 CONFIG REQUIRED)
 set(G4_FOUND ${Geant4_FOUND})
+
+if(G4_VERBOSE)
+  message(STATUS "OPTICKS_PREFIX     : ${OPTICKS_PREFIX} " )
+  message(STATUS "G4_MODULE          : ${G4_MODULE} " )
+  message(STATUS "G4_PREFIX          : ${G4_PREFIX} " )
+  message(STATUS "G4_FOUND           : ${G4_FOUND} " )
+  message(STATUS "G4_DIR             : ${G4_DIR} " )
+  message(STATUS "G4_DIRDIR          : ${G4_DIRDIR} " )
+  message(STATUS "G4_VERSION         : ${G4_VERSION} " )
+  message(STATUS "G4_VERSION_INTEGER : ${G4_VERSION_INTEGER} " )
+  message(STATUS "G4_INCLUDE_DIR     : ${G4_INCLUDE_DIR} " )
+  message(STATUS "G4_INCLUDE_DIRS    : ${G4_INCLUDE_DIRS} " )
+  message(STATUS "G4_LIBRARIES       : ${G4_LIBRARIES} " )
+  message(STATUS "G4_DEFINITIONS     : ${G4_DEFINITIONS} " )
+  message(STATUS "Geant4_LIBRARIES   : ${Geant4_LIBRARIES} ")
+endif()
+
 
 # parse header to yield version integer at configure time
 if(G4_FOUND)
@@ -28,7 +50,7 @@ if(G4_FOUND)
    foreach(_line ${_contents})
         if (_line MATCHES "#define G4VERSION_NUMBER[ ]+([0-9]+)$")
             set(Geant4_VERSION_INTEGER ${CMAKE_MATCH_1})
-            #message(STATUS "FindG4.cmake:_line ${_line} ===> ${CMAKE_MATCH_1} ") 
+            message(STATUS "FindG4.cmake:_line ${_line} ===> ${CMAKE_MATCH_1} ") 
         endif()
    endforeach()
 else()
@@ -38,7 +60,7 @@ else()
 endif()
 
 if(Geant4_FOUND AND NOT TARGET Opticks::G4)
-
+  message(STATUS " Geant4_DIR     : ${Geant4_DIR} ")
   set(G4_DIR         ${Geant4_DIR})
   get_filename_component(G4_DIRDIR ${G4_DIR} DIRECTORY)
 
@@ -49,19 +71,50 @@ if(Geant4_FOUND AND NOT TARGET Opticks::G4)
   set(G4_LIBRARIES   ${Geant4_LIBRARIES})
   set(G4_DEFINITIONS ${Geant4_DEFINITIONS})
 
+if(G4_VERBOSE)
+  message(STATUS "OPTICKS_PREFIX     : ${OPTICKS_PREFIX} " )
+  message(STATUS "G4_MODULE          : ${G4_MODULE} " )
+  message(STATUS "G4_PREFIX          : ${G4_PREFIX} " )
+  message(STATUS "G4_FOUND           : ${G4_FOUND} " )
+  message(STATUS "G4_DIR             : ${G4_DIR} " )
+  message(STATUS "G4_DIRDIR          : ${G4_DIRDIR} " )
+  message(STATUS "G4_VERSION         : ${G4_VERSION} " )
+  message(STATUS "G4_VERSION_INTEGER : ${G4_VERSION_INTEGER} " )
+  message(STATUS "G4_INCLUDE_DIR     : ${G4_INCLUDE_DIR} " )
+  message(STATUS "G4_INCLUDE_DIRS    : ${G4_INCLUDE_DIRS} " )
+  message(STATUS "G4_LIBRARIES       : ${G4_LIBRARIES} " )
+  message(STATUS "G4_DEFINITIONS     : ${G4_DEFINITIONS} " )
+  message(STATUS "Geant4_DIR         : ${Geant4_DIR}")
+endif()
+
+
   set(G4_targets) 
 
   set(_targets)
+  
+  message(STATUS "Geant4_LIBRARIES   : ${Geant4_LIBRARIES}")
+     find_library( _loc 
+       NAMES G4Tree
+       PATHS ${G4_DIRDIR}
+       REQUIRED
+       )
+     message(STATUS "_loc ${_loc} ")
+     set(Geant4_LIBRARIES   G4Tree G4FR G4GMocren G4visHepRep G4RayTracer G4VRML G4vis_management G4modeling G4interfaces G4persistency G4analysis G4error_propagation G4readout G4physicslists G4run G4event
+                            G4tracking G4parmodels G4processes G4digits_hits G4track G4particles G4geometry G4materials G4graphics_reps G4intercoms G4global G4zlib)
+  message(STATUS "G4_LIBRARIES       : ${Geant4_LIBRARIES} " )
   foreach(_lib ${Geant4_LIBRARIES})
      set(_loc "${_lib}-NOTFOUND" ) # https://cmake.org/pipermail/cmake/2007-February/012966.html     
-     #message(STATUS "_lib ${_lib} ") 
+     message(STATUS "_lib ${_lib} ")
+     message(STATUS "_loc ${_loc} ")
      find_library( _loc 
-          NAMES ${_lib}
-          PATHS ${G4_DIRDIR} )
-
+       NAMES ${_lib}
+       PATHS ${G4_DIRDIR}
+       REQUIRED
+	)
+     message(STATUS "_loc ${_loc} ")
      if(_loc)
          set(_tgt "Opticks::${_lib}")
-         #message(STATUS "${_tgt} ${_loc} ") 
+         message(STATUS "${_tgt} ${_loc} ") 
          add_library(${_tgt}  UNKNOWN IMPORTED) 
          set_target_properties(${_tgt} PROPERTIES IMPORTED_LOCATION "${_loc}")
          set_target_properties(${_tgt} PROPERTIES INTERFACE_IMPORTED_LOCATION "${_loc}")  # workaround whitelisting restriction
@@ -73,7 +126,7 @@ if(Geant4_FOUND AND NOT TARGET Opticks::G4)
   endforeach()  
 
   string(REGEX REPLACE "-D" "" _defs "${Geant4_DEFINITIONS}")
-  #message(STATUS "_defs ${_defs} ") 
+  message(STATUS "_defs ${_defs} ") 
 
   add_library(Opticks::G4 INTERFACE IMPORTED)
 
